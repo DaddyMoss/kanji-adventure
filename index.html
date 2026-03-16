@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kanji Adventure</title>
+    <script src="https://cdn.jsdelivr.net/gh/asdfjkl/kanjicanvas@master/dist/kanjicanvas.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #eef; margin: 0; overflow: hidden; }
+        #stage { width: 100%; height: 120px; background: white; border-bottom: 2px solid #ccc; position: relative; margin-bottom: 20px; }
+        
+        /* The Parappa-style character */
+        #player { width: 80px; position: absolute; bottom: 10px; left: 0; transition: left 0.5s; z-index: 2; transform-origin: bottom; animation: wobble 0.6s infinite alternate; }
+        @keyframes wobble { from { transform: rotateY(0deg); } to { transform: rotateY(45deg); } }
+        
+        #goal { width: 60px; position: absolute; bottom: 10px; right: 10px; }
+        #prompt { font-size: 40px; margin: 10px; }
+        
+        /* The Drawing Area */
+        #kanji-canvas { border: 3px solid #333; background: white; border-radius: 10px; touch-action: none; }
+        
+        button { font-size: 20px; padding: 15px 30px; margin: 10px; border-radius: 10px; cursor: pointer; }
+        .check-btn { background: #4CAF50; color: white; border: none; }
+        .clear-btn { background: #f44336; color: white; border: none; }
+    </style>
+</head>
+<body>
+
+    <div id="stage">
+        <img id="player" src="character.png">
+        <img id="goal" src="goal star.png">
+    </div>
+
+    <div id="prompt">Loading...</div>
+    
+    <div id="kanji-canvas"></div>
+
+    <br>
+    <button class="clear-btn" onclick="kanjiCanvas.clear()">Clear</button>
+    <button class="check-btn" onclick="checkAnswer()">Check Answer</button>
+
+    <script>
+        // ADD YOUR KANJI PAIRS HERE
+        const quizData = [
+            { question: "ねこ", answer: "猫" },
+            { question: "いぬ", answer: "犬" },
+            { question: "き", answer: "木" }
+        ];
+
+        let currentIdx = 0;
+        let kanjiCanvas;
+
+        // Setup the handwriting recognition
+        window.onload = function() {
+            kanjiCanvas = new KanjiCanvas('kanji-canvas', 280, 280);
+            showQuestion();
+        };
+
+        function showQuestion() {
+            if (currentIdx < quizData.length) {
+                document.getElementById('prompt').innerText = "Draw: " + quizData[currentIdx].question;
+                kanjiCanvas.clear();
+            } else {
+                document.getElementById('prompt').innerText = "🎉 YOU WIN!";
+            }
+        }
+
+        function checkAnswer() {
+            // Get the top 3 recognized characters from the drawing
+            const recognitionResults = kanjiCanvas.recognize();
+            const correctKanji = quizData[currentIdx].answer;
+
+            if (recognitionResults.includes(correctKanji)) {
+                alert("Correct!");
+                currentIdx++;
+                movePlayer();
+                showQuestion();
+            } else {
+                alert("Try again!");
+                kanjiCanvas.clear();
+            }
+        }
+
+        function movePlayer() {
+            const progress = (currentIdx / quizData.length) * 85;
+            document.getElementById('player').style.left = progress + "%";
+        }
+    </script>
+</body>
+</html>
