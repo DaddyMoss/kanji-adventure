@@ -4,24 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kanji Adventure</title>
-    <script src="https://cdn.jsdelivr.net/gh/asdfjkl/kanjicanvas@master/dist/kanjicanvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kanjicanvas@latest/dist/kanjicanvas.min.js"></script>
     <style>
         body { font-family: sans-serif; text-align: center; background: #eef; margin: 0; overflow: hidden; }
         #stage { width: 100%; height: 120px; background: white; border-bottom: 2px solid #ccc; position: relative; margin-bottom: 20px; }
         
-        /* The Parappa-style character */
         #player { width: 80px; position: absolute; bottom: 10px; left: 0; transition: left 0.5s; z-index: 2; transform-origin: bottom; animation: wobble 0.6s infinite alternate; }
         @keyframes wobble { from { transform: rotateY(0deg); } to { transform: rotateY(45deg); } }
         
         #goal { width: 60px; position: absolute; bottom: 10px; right: 10px; }
-        #prompt { font-size: 40px; margin: 10px; }
+        #prompt { font-size: 32px; margin: 10px; font-weight: bold; }
         
-        /* The Drawing Area */
-        #kanji-canvas { border: 3px solid #333; background: white; border-radius: 10px; touch-action: none; }
+        /* Ensure the drawing area is visible */
+        #kanji-canvas { 
+            border: 5px solid #333; 
+            background: white; 
+            border-radius: 10px; 
+            margin: 0 auto;
+            display: block;
+            touch-action: none; /* Crucial for iPad touch pen */
+        }
         
-        button { font-size: 20px; padding: 15px 30px; margin: 10px; border-radius: 10px; cursor: pointer; }
-        .check-btn { background: #4CAF50; color: white; border: none; }
-        .clear-btn { background: #f44336; color: white; border: none; }
+        .controls { margin-top: 15px; }
+        button { font-size: 20px; padding: 15px 30px; margin: 5px; border-radius: 10px; cursor: pointer; border: none; font-weight: bold; }
+        .check-btn { background: #4CAF50; color: white; }
+        .clear-btn { background: #f44336; color: white; }
     </style>
 </head>
 <body>
@@ -31,58 +38,67 @@
         <img id="goal" src="goal star.png">
     </div>
 
-    <div id="prompt">Loading...</div>
+    <div id="prompt">Preparing Game...</div>
     
     <div id="kanji-canvas"></div>
 
-    <br>
-    <button class="clear-btn" onclick="kanjiCanvas.clear()">Clear</button>
-    <button class="check-btn" onclick="checkAnswer()">Check Answer</button>
+    <div class="controls">
+        <button class="clear-btn" onclick="clearCanvas()">Clear</button>
+        <button class="check-btn" onclick="checkAnswer()">Check Answer</button>
+    </div>
 
     <script>
-        // ADD YOUR KANJI PAIRS HERE
         const quizData = [
-            { question: "ねこ", answer: "猫" },
-            { question: "いぬ", answer: "犬" },
-            { question: "き", answer: "木" }
+            { question: "ねこ (Neko)", answer: "猫" },
+            { question: "いぬ (Inu)", answer: "犬" },
+            { question: "き (Ki)", answer: "木" }
         ];
 
         let currentIdx = 0;
         let kanjiCanvas;
 
-        // Setup the handwriting recognition
         window.onload = function() {
-            kanjiCanvas = new KanjiCanvas('kanji-canvas', 280, 280);
-            showQuestion();
+            try {
+                // Initialize the library
+                kanjiCanvas = new KanjiCanvas('kanji-canvas', 300, 300);
+                showQuestion();
+            } catch (e) {
+                document.getElementById('prompt').innerText = "Error loading drawing box. Try refreshing!";
+                console.error(e);
+            }
         };
 
         function showQuestion() {
             if (currentIdx < quizData.length) {
                 document.getElementById('prompt').innerText = "Draw: " + quizData[currentIdx].question;
-                kanjiCanvas.clear();
             } else {
                 document.getElementById('prompt').innerText = "🎉 YOU WIN!";
+                document.getElementById('kanji-canvas').style.display = "none";
             }
         }
 
-        function checkAnswer() {
-            // Get the top 3 recognized characters from the drawing
-            const recognitionResults = kanjiCanvas.recognize();
-            const correctKanji = quizData[currentIdx].answer;
+        function clearCanvas() {
+            kanjiCanvas.clear();
+        }
 
-            if (recognitionResults.includes(correctKanji)) {
-                alert("Correct!");
+        function checkAnswer() {
+            const results = kanjiCanvas.recognize();
+            const correct = quizData[currentIdx].answer;
+
+            if (results && results.includes(correct)) {
+                alert("Correct! ✨");
                 currentIdx++;
                 movePlayer();
+                kanjiCanvas.clear();
                 showQuestion();
             } else {
-                alert("Try again!");
+                alert("Not quite! Try again.");
                 kanjiCanvas.clear();
             }
         }
 
         function movePlayer() {
-            const progress = (currentIdx / quizData.length) * 85;
+            const progress = (currentIdx / quizData.length) * 80;
             document.getElementById('player').style.left = progress + "%";
         }
     </script>
